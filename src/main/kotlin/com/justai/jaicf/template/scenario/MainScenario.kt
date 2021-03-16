@@ -1,58 +1,118 @@
 package com.justai.jaicf.template.scenario
 
-import com.justai.jaicf.activator.caila.caila
 import com.justai.jaicf.builder.Scenario
+import com.justai.jaicf.channel.jaicp.telephony
 
-val mainScenario = Scenario {
-    state("start") {
+val mainScenario = Scenario(telephony) {
+
+    state("один") {
         activators {
             regex("/start")
-            intent("Hello")
+            regex("один")
         }
         action {
-            reactions.run {
-                image("https://media.giphy.com/media/ICOgUNjpvO0PC/source.gif")
-                sayRandom(
-                    "Hello! How can I help?",
-                    "Hi there! How can I help you?"
-                )
-                buttons(
-                    "Help me!",
-                    "How are you?",
-                    "What is your name?"
-                )
+            reactions.say(
+                "Привет! Это какая-нибудь длинная фраза, которую можно перебивать. Бери и перебивай, пока я тут еще буду говорить.",
+                bargeIn = true
+            )
+        }
+    }
+
+    /**
+     * Проверка ситуации, когда перебиваться должна только одна фраза.
+     * */
+    state("два") {
+        activators {
+            regex("два")
+        }
+        action {
+            reactions.say("Привет! Это не особо длинная фраза, но ее нет возможности перебить.")
+            reactions.say(
+                "А вот это вторая фраза, ее уже можно перебивать. Вот, попробуй, перебей. А я тут еще поговорю чуток.",
+                bargeIn = true
+            )
+        }
+    }
+
+    /**
+     * Проверка перебиваня в каком-нибудь оределенном контексте.
+     * */
+    state("три") {
+        activators {
+            regex("три")
+        }
+        action {
+            reactions.say(
+                "Эту фразу можно перебивать только словами: оператор, заткнись, и носорог.",
+                bargeInContext = "/ContextHandler"
+            )
+        }
+    }
+
+    /**
+     * Проверка смешанных прерываний. Первая фраза не прерывается, вторая - только на стейты в корне (словами один/два/три/четыре), третья фраза ловит только оператор/заткнись/носорог.
+     * */
+    state("четыре") {
+        activators {
+            regex("четыре")
+        }
+        action {
+            reactions.say("Вот эту фразу ты не сможешь перебить никак. Она еще продолжается.")
+            reactions.say(
+                "Вот эту фразу можно перебивать числами от одного до четырех. Я пока поболтаю и подожду, пока ты скажешь какое-нибудь число.",
+                bargeIn = true
+            )
+            reactions.say(
+                "Ок, тогда продолжаем, сейчас ты можешь сказать оператор, заткнись, или носорог, чтобы активировать баржин по контексту. Я тут тоже еще поговорю, чтобы ты протестировал.",
+                bargeInContext = "/ContextHandler"
+            )
+        }
+    }
+
+    /**
+     * Проверка того, как бот восстанавливает контекст, если юзер написал херню и сценарий бросил ошибку в середине баржин-активации.
+     * */
+    state("пять") {
+        activators {
+            regex("пять")
+        }
+        action {
+            reactions.say(
+                "Ок, перебей меня и смотри в логи. В логах должна быть ошибка, баржина не будет, но бот будет продолжать жить и болтать.",
+                bargeInContext = "/SOME_INVALID_STATE_PATH"
+            )
+        }
+    }
+
+    state("ContextHandler") {
+        state("оператор") {
+            activators {
+                regex("оператор")
+            }
+            action {
+                reactions.say("Сейчас позову оператора")
+            }
+        }
+        state("заткнись") {
+            activators {
+                regex("заткнись")
+            }
+            action {
+                reactions.say("Я заткнулся из вложенного стейта.")
             }
         }
     }
 
-    state("bye") {
+    state("заткнись") {
         activators {
-            intent("Bye")
+            regex("заткнись")
         }
-
         action {
-            reactions.sayRandom(
-                "See you soon!",
-                "Bye-bye!"
-            )
-            reactions.image("https://media.giphy.com/media/EE185t7OeMbTy/source.gif")
-        }
-    }
-
-    state("smalltalk", noContext = true) {
-        activators {
-            anyIntent()
-        }
-
-        action(caila) {
-            activator.topIntent.answer?.let { reactions.say(it) } ?: reactions.go("/fallback")
+            reactions.say("Я заткнулся из топ-левел стейта.")
         }
     }
 
     fallback {
-        reactions.sayRandom(
-            "Sorry, I didn't get that...",
-            "Sorry, could you repeat please?"
-        )
+        reactions.sayRandom("Це кетчолл.")
     }
 }
