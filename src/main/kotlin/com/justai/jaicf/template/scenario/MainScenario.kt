@@ -106,6 +106,14 @@ val mainScenario = Scenario(telephony) {
                 reactions.say("Я заткнулся из вложенного стейта.")
             }
         }
+        state("носорог") {
+            activators {
+                regex("носорог")
+            }
+            action {
+                reactions.say("Да.")
+            }
+        }
     }
 
     state("заткнись") {
