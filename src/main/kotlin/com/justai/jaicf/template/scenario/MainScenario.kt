@@ -3,6 +3,7 @@ package com.justai.jaicf.template.scenario
 import com.justai.jaicf.builder.Scenario
 import com.justai.jaicf.channel.jaicp.telephony
 
+
 val mainScenario = Scenario(telephony) {
 
     state("один") {
@@ -24,9 +25,13 @@ val mainScenario = Scenario(telephony) {
     state("два") {
         activators {
             regex("два")
+            regex("да")
         }
         action {
-            reactions.say("Привет! Это не особо длинная фраза, но ее нет возможности перебить.")
+            // эта фраза не должна перебиваться
+            reactions.say(
+                "Привет! Это не особо длинная фраза, но ее нет возможности перебить. Она продолжается, меня не перебивает."
+            )
             reactions.say(
                 "А вот это вторая фраза, ее уже можно перебивать. Вот, попробуй, перебей. А я тут еще поговорю чуток.",
                 bargeIn = true
@@ -43,7 +48,7 @@ val mainScenario = Scenario(telephony) {
         }
         action {
             reactions.say(
-                "Эту фразу можно перебивать только словами: оператор, заткнись, и носорог.",
+                "Эту фразу можно перебить словом оператор, и тебе ответит оператор. Еще можно сказать заткнись и отработает вложенный стейт. ",
                 bargeInContext = "/ContextHandler"
             )
         }
@@ -113,6 +118,6 @@ val mainScenario = Scenario(telephony) {
     }
 
     fallback {
-        reactions.sayRandom("Це кетчолл.")
+        reactions.sayRandom("Не понял. Вы сказали: ${request.input}.")
     }
 }
